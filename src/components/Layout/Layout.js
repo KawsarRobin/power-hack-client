@@ -60,7 +60,7 @@ const Layout = () => {
 
   //   Load all bills
   useEffect(() => {
-    fetch(`http://localhost:5000/billing-listing`)
+    fetch(`https://fathomless-plains-85816.herokuapp.com/billing-listing`)
       .then((res) => res.json())
       .then((data) => setAllBills(data));
   }, [isLoading]);
