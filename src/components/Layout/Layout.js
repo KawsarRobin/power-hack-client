@@ -106,6 +106,28 @@ const Layout = () => {
       });
   };
 
+  // Deleting bills by id
+  const handleDelete = (id) => {
+    console.log(id);
+    if (window.confirm('Are you sure to delete?')) {
+      const url = `https://fathomless-plains-85816.herokuapp.com/delete-billing/${id}`;
+      fetch(url, {
+        method: 'DELETE',
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log(data);
+          if (data.deletedCount > 0) {
+            alert('You have successfully deleted billings!!');
+            const remainingBills = bills.filter((bill) => bill._id !== id);
+            setBills(remainingBills);
+            setIsLoading(false);
+          }
+        })
+        .catch((err) => console.log(err.message));
+    }
+  };
+
   return (
     <div>
       <div>
@@ -214,7 +236,12 @@ const Layout = () => {
 
                 <td>
                   <button className="btn btn-secondary m-1">Edit</button>
-                  <button className="btn btn-danger m-1">delete</button>
+                  <button
+                    onClick={() => handleDelete(bill._id)}
+                    className="btn btn-danger m-1"
+                  >
+                    delete
+                  </button>
                 </td>
                 <td></td>
               </tr>
