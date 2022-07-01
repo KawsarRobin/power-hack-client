@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Form, Modal, Table } from 'react-bootstrap';
 import Pagination from 'react-bootstrap/Pagination';
+import { useForm } from 'react-hook-form';
 
 const Layout = () => {
   const [allBills, setAllBills] = useState([]);
@@ -18,6 +19,22 @@ const Layout = () => {
   const [matchedBillings, setMatchedBillings] = useState([]);
   const [pageCount, setPageCount] = useState(0);
   const [page, setPage] = useState(0);
+  const [singleBill, setSingleBill] = useState({});
+
+  const {
+    register,
+    formState: { errors },
+    handleSubmit,
+    reset,
+  } = useForm();
+
+  //   handling two function clicks
+  const handleTwoOnclick = (id) => {
+    const matchedBill = allBills.filter((bill) => bill._id === id);
+    setSingleBill(matchedBill[0]);
+    setLgShow(true);
+    reset();
+  };
 
   const handleName = (e) => {
     setName(e.target.value);
@@ -34,6 +51,7 @@ const Layout = () => {
     setPaidAmount(e.target.value);
   };
 
+  //   Pagination
   let active = page;
   let items = [];
   for (let number = 0; number < pageCount; number++) {
@@ -90,7 +108,7 @@ const Layout = () => {
   }, [isLoading, allBills]);
 
   //   Posting single bill to db
-  const handleSubmit = (e) => {
+  const handleSubmitForm = (e) => {
     e.preventDefault();
     const bill = {
       name: name,
@@ -115,9 +133,33 @@ const Layout = () => {
       });
   };
 
+  // Update Billing
+  const onSubmit = (data) => {
+    const updatedBill = data;
+    fetch(
+      `https://fathomless-plains-85816.herokuapp.com/update-billing/${data.id}`,
+      {
+        method: 'PUT',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(updatedBill),
+      }
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.modifiedCount > 0) {
+          alert('Order Status updated to Approved Successfully');
+          setIsLoading(false);
+          setLgShow(false);
+          reset();
+        }
+      })
+      .catch((err) => console.log(err.message));
+  };
+
   // Deleting bills by id
   const handleDelete = (id) => {
-    console.log(id);
     if (window.confirm('Are you sure to delete?')) {
       const url = `https://fathomless-plains-85816.herokuapp.com/delete-billing/${id}`;
       fetch(url, {
@@ -125,7 +167,6 @@ const Layout = () => {
       })
         .then((res) => res.json())
         .then((data) => {
-          console.log(data);
           if (data.deletedCount > 0) {
             alert('You have successfully deleted billings!!');
             const remainingBills = bills.filter((bill) => bill._id !== id);
@@ -136,33 +177,6 @@ const Layout = () => {
         .catch((err) => console.log(err.message));
     }
   };
-
-  //    // Update
-  //    const handleUpdate = (id) => {
-  //     const status = {
-  //       status: 'Approved',
-  //     };
-
-  //     fetch(
-  //       `http://localhost:5000/update-billing/${id}`,
-  //       {
-  //         method: 'PUT',
-  //         headers: {
-  //           'content-type': 'application/json',
-  //         },
-  //         body: JSON.stringify(status),
-  //       }
-  //     )
-  //       .then((res) => res.json())
-  //       .then((data) => {
-  //         if (data.modifiedCount > 0) {
-  //           alert('Order Status updated to Approved Successfully');
-  //         //   setIsApproved(true);
-  //         //   setIsShipped(false);
-  //         }
-  //       })
-  //       .catch((err) => console.log(err.message));
-  //   };
 
   return (
     <div>
@@ -199,7 +213,7 @@ const Layout = () => {
                     </Modal.Title>
                   </Modal.Header>
                   <Modal.Body>
-                    <Form onSubmit={handleSubmit}>
+                    <Form onSubmit={handleSubmitForm}>
                       <Form.Label>
                         Please, Provide All Information Correctly
                       </Form.Label>
@@ -257,7 +271,57 @@ const Layout = () => {
                       Provide Information to Update
                     </Modal.Title>
                   </Modal.Header>
-                  <Modal.Body></Modal.Body>
+                  <Modal.Body>
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                      <input
+                        defaultValue={singleBill._id}
+                        readOnly
+                        className="form-control mb-4"
+                        {...register('id', { required: true })}
+                      />
+                      <input
+                        defaultValue={singleBill.name}
+                        placeholder="Full Name"
+                        required
+                        className="form-control mb-4"
+                        {...register('name', { required: true })}
+                      />
+                      {errors.firstName?.type === 'required' &&
+                        'Full name is required'}
+                      <input
+                        defaultValue={singleBill.email}
+                        placeholder="Email"
+                        required
+                        className="form-control mb-4"
+                        {...register('email', {
+                          required: 'Email Address is required',
+                        })}
+                      />
+                      <p>{errors.mail?.message}</p>
+                      <input
+                        defaultValue={singleBill.phone}
+                        placeholder="Phone"
+                        required
+                        type="number"
+                        className="form-control mb-4"
+                        {...register('phone', {
+                          required: true,
+                          maxLength: 11,
+                        })}
+                      />
+                      {errors.phone && <p>Phone is required</p>}
+                      <input
+                        defaultValue={singleBill.paidAmount}
+                        placeholder="Paid Amount"
+                        required
+                        className="form-control mb-4"
+                        {...register('paidAmount', { required: true })}
+                      />
+                      {errors.lastName && <p>Paid Amount is required</p>}
+
+                      <input className="btn btn-warning" type="submit" />
+                    </form>
+                  </Modal.Body>
                 </Modal>
               </div>
             </div>
@@ -282,9 +346,11 @@ const Layout = () => {
                 <td>{bill.email}</td>
                 <td>{bill.phone}</td>
                 <td>{bill.paidAmount}</td>
-
                 <td>
-                  <Button variant="dark" onClick={() => setLgShow(true)}>
+                  <Button
+                    variant="dark"
+                    onClick={() => handleTwoOnclick(bill._id)}
+                  >
                     Edit
                   </Button>
                   <button
@@ -302,6 +368,11 @@ const Layout = () => {
       </div>
       <div className="ms-5">
         <Pagination>{items}</Pagination>
+      </div>
+      <div>
+        <h6 className="text-center pt-5 fw-bolder">
+          Copyright © 2022 Kowshar Robin All rights reserved.
+        </h6>
       </div>
     </div>
   );
