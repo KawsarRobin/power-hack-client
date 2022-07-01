@@ -3,7 +3,9 @@ import { Button, Form, Modal, Table } from 'react-bootstrap';
 import Pagination from 'react-bootstrap/Pagination';
 
 const Layout = () => {
+  const [allBills, setAllBills] = useState([]);
   const [show, setShow] = useState(false);
+  const [lgShow, setLgShow] = useState(false);
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,13 +52,20 @@ const Layout = () => {
   //   Handling Search
   const handleSearch = (e) => {
     const searchText = e.target.value;
-    const matchedBillings = bills.filter((bill) =>
+    const matchedBillings = allBills.filter((bill) =>
       bill.name.toLowerCase().includes(searchText.toLowerCase())
     );
     setMatchedBillings(matchedBillings);
   };
 
-  //   Loading all bills
+  //   Load all bills
+  useEffect(() => {
+    fetch(`http://localhost:5000/billing-listing`)
+      .then((res) => res.json())
+      .then((data) => setAllBills(data));
+  }, [isLoading]);
+
+  //   Loading all bills with pagination
   useEffect(() => {
     fetch(
       `https://fathomless-plains-85816.herokuapp.com/billing-list?page=${page}&&size=${size}`
@@ -73,12 +82,12 @@ const Layout = () => {
 
   //   Total paid
   useEffect(() => {
-    const total = bills.reduce(
+    const total = allBills.reduce(
       (previous, bill) => previous + parseFloat(bill.paidAmount),
       0
     );
     setTotalAmount(total);
-  }, [bills]);
+  }, [isLoading, allBills]);
 
   //   Posting single bill to db
   const handleSubmit = (e) => {
@@ -127,6 +136,33 @@ const Layout = () => {
         .catch((err) => console.log(err.message));
     }
   };
+
+  //    // Update
+  //    const handleUpdate = (id) => {
+  //     const status = {
+  //       status: 'Approved',
+  //     };
+
+  //     fetch(
+  //       `http://localhost:5000/update-billing/${id}`,
+  //       {
+  //         method: 'PUT',
+  //         headers: {
+  //           'content-type': 'application/json',
+  //         },
+  //         body: JSON.stringify(status),
+  //       }
+  //     )
+  //       .then((res) => res.json())
+  //       .then((data) => {
+  //         if (data.modifiedCount > 0) {
+  //           alert('Order Status updated to Approved Successfully');
+  //         //   setIsApproved(true);
+  //         //   setIsShipped(false);
+  //         }
+  //       })
+  //       .catch((err) => console.log(err.message));
+  //   };
 
   return (
     <div>
@@ -210,6 +246,19 @@ const Layout = () => {
                     </Button>
                   </Modal.Footer>
                 </Modal>
+                <Modal
+                  size="lg"
+                  show={lgShow}
+                  onHide={() => setLgShow(false)}
+                  aria-labelledby="example-modal-sizes-title-lg"
+                >
+                  <Modal.Header closeButton>
+                    <Modal.Title id="example-modal-sizes-title-lg">
+                      Provide Information to Update
+                    </Modal.Title>
+                  </Modal.Header>
+                  <Modal.Body></Modal.Body>
+                </Modal>
               </div>
             </div>
           </nav>
@@ -235,7 +284,9 @@ const Layout = () => {
                 <td>{bill.paidAmount}</td>
 
                 <td>
-                  <button className="btn btn-secondary m-1">Edit</button>
+                  <Button variant="dark" onClick={() => setLgShow(true)}>
+                    Edit
+                  </Button>
                   <button
                     onClick={() => handleDelete(bill._id)}
                     className="btn btn-danger m-1"
