@@ -58,16 +58,16 @@ const Layout = () => {
 
   //   Loading all bills
   useEffect(() => {
-    fetch(`http://localhost:5000/billing-list?page=${page}&&size=${size}`)
+    fetch(
+      `https://fathomless-plains-85816.herokuapp.com/billing-list?page=${page}&&size=${size}`
+    )
       .then((res) => res.json())
       .then((data) => {
-        console.log(data);
         setBills(data.bills);
         setMatchedBillings(data.bills);
         const count = data.count;
         const pageNumber = Math.ceil(count / size);
         setPageCount(pageNumber);
-        console.log(pageNumber);
       });
   }, [isLoading, page]);
 
@@ -89,7 +89,7 @@ const Layout = () => {
       phone: phone,
       paidAmount: parseFloat(paidAmount),
     };
-    fetch('http://localhost:5000/add-billing', {
+    fetch('https://fathomless-plains-85816.herokuapp.com/add-billing', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
