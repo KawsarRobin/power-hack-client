@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button, Form, Modal, Table } from 'react-bootstrap';
 import Pagination from 'react-bootstrap/Pagination';
 import { useForm } from 'react-hook-form';
+import { Link } from 'react-router-dom';
 
 const Layout = () => {
   const [allBills, setAllBills] = useState([]);
@@ -184,7 +185,12 @@ const Layout = () => {
         <nav className="navbar navbar-light bg-light">
           <div className="container">
             <h3>PowerHack</h3>
-            <h6>Paid Total: {totalAmount}</h6>
+            <div className="d-flex ">
+              <h5 className="m-4">Paid Total: {totalAmount}</h5>
+              <Link className="text-decoration-none m-3" to="/login">
+                <Button>Login</Button>
+              </Link>
+            </div>
           </div>
         </nav>
       </div>
